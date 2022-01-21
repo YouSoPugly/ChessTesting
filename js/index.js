@@ -6,6 +6,7 @@ var game = new Chess()
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
 const movesFromBook = 3;
+var bot = new Bot(game);
 
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
@@ -31,14 +32,13 @@ function onDragStart (source, piece, position, orientation) {
 }
 
 function makeRandomMove () {
-  var possibleMoves = game.moves()
+  var possibleMoves = bot.generateMoves()
 
   // game over
   if (possibleMoves.length === 0) return
 
   var randomIdx = Math.floor(Math.random() * possibleMoves.length)
   game.move(possibleMoves[randomIdx])
-  board.position(game.fen())
 }
 
 async function onDrop (source, target) {
@@ -107,13 +107,13 @@ async function fetchOpeningMove() {
 
 fetch(url, options)
   .then( res => res.json() )
-  .then( data => { 
+  .then( data => {
     if (data['moves'].length != 0) {
       game.move(data['moves'][0]['san'])
     } else {
       makeRandomMove()
     }
-  });
+  }).then(board.position(game.fen()));
 
   console.log(game.moves()[0])
 }
