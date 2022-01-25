@@ -101,19 +101,18 @@ var config = {
 board = Chessboard('myBoard', config)
 
 async function fetchOpeningMove() {
-  const url = "https://explorer.lichess.ovh/masters?fen=".concat(game.fen()); 
+  const url = "https://explorer.lichess.ovh/masters?fen=".concat(game.fen());
 
   const options = {};
 
-fetch(url, options)
-  .then( res => res.json() )
-  .then( data => {
-    if (data['moves'].length != 0) {
-      game.move(data['moves'][0]['san'])
-    } else {
-      makeRandomMove()
-    }
-  }).then(board.position(game.fen()));
+  fetch(url, options)
+    .then( res => res.json() )
+    .then( data => {
+      if (data['moves'].length != 0) {
+        game.move(data['moves'][0]['san'])
+      } else {
+        makeRandomMove()
+      }
+    }).then(board.position(game.fen())).then(console.log(bot.evaluateBoard(game)));
 
-  console.log(game.moves()[0])
-}
+  }

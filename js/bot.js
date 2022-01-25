@@ -26,15 +26,19 @@ class Bot {
 
     evaluateBoard(game) {
         var fen = game.fen()
-        var score;
+        var score = 0;
 
         if (game.in_checkmate()) {
-            return (10000 * (game.turn().equals('b') ? -1 : 1))
+            return (10000 * (game.turn() === 'b' ? -1 : 1))
         }
 
-        fen.array.forEach(element => {
-            score += this.getPieceValue(element.toLowerCase()) * (checkCase(element))
-        });
+        let i = 0;
+        while (fen.charAt(i) != ' ') {
+            score += this.getPieceValue(fen.charAt(i).toLowerCase()) * (checkCase(fen.charAt(i)))
+            i++
+        }
+
+        return score;
 
     }
 
@@ -44,20 +48,19 @@ class Bot {
             return 0;
         }
 
-        if (piece.type === 'p') {
+        if (piece === 'p') {
             return 1;
-        } else if (piece.type === 'r') {
+        } else if (piece === 'r') {
             return 5;
-        } else if (piece.type === 'n') {
+        } else if (piece === 'n') {
             return 3;
-        } else if (piece.type === 'b') {
+        } else if (piece === 'b') {
             return 3;
-        } else if (piece.type === 'q') {
+        } else if (piece === 'q') {
             return 9;
-        } else if (piece.type === 'k') {
-            return 20;
         }
-        throw "Unknown piece type: " + piece.type;
+
+        return 0;
     }
 
 }
