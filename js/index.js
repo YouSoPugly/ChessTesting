@@ -6,7 +6,7 @@ var game = new Chess()
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
 const movesFromBook = 3;
-var bot = new Bot(game);
+var bot = new Bot(game, 3);
 
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
@@ -111,7 +111,7 @@ async function fetchOpeningMove() {
       if (data['moves'].length != 0) {
         game.move(data['moves'][0]['san'])
       } else {
-        makeRandomMove()
+        game.move(bot.getMove())
       }
     }).then(board.position(game.fen())).then(console.log(bot.evaluateBoard(game)));
 
