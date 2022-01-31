@@ -1,12 +1,14 @@
 // NOTE: this example uses the chess.js library:
 // https://github.com/jhlywa/chess.js
 
+//const { Chess } = require("chess.js");
+
 var board = null
 var game = new Chess()
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
 const movesFromBook = 3;
-var bot = new Bot(game, 3);
+var bot = new Bot(game, 2);
 
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
@@ -101,7 +103,7 @@ var config = {
 board = Chessboard('myBoard', config)
 
 async function fetchOpeningMove() {
-  const url = "https://explorer.lichess.ovh/masters?fen=".concat(game.fen());
+  const url = "https://explorer.lichess.ovh/lichess?variant=standard&speeds=blitz,rapid,classical&fen=".concat(game.fen());
 
   const options = {};
 
@@ -111,7 +113,10 @@ async function fetchOpeningMove() {
       if (data['moves'].length != 0) {
         game.move(data['moves'][0]['san'])
       } else {
-        game.move(bot.getMove())
+        let gameClone = new Chess(game.fen())
+        let move = bot.getMove(gameClone)
+        console.log(move)
+        game.move(move.move)
       }
     }).then(board.position(game.fen())).then(console.log(bot.evaluateBoard(game)));
 
