@@ -1,26 +1,39 @@
-const path = require('path');
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
 module.exports = {
+  entry: "./dist/main.js",
   devtool: 'inline-source-map',
-  devServer: {
-    //contentBase: './dist'
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
   },
+  devServer: {},
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"],
+    alias: {
+      jquery: "jquery/src/jquery",
+    },
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./dist/index.html",
+    }),
+  ],
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
+        test: /\.(png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+          },
+        ],
+      },
+      {
+        test: /\.html$/i,
+        loader: "html-loader",
+      },
+    ],
   },
-  resolve: {
-    extensions: [ '.tsx', '.ts', '.js' ],
-    alias: {
-        jquery: "jquery/src/jquery"
-    }
-  },
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist')
-  }
 };

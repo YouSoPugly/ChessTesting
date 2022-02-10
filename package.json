@@ -8,7 +8,9 @@
     "chess.js": "^0.12.0",
     "chessboard": "^2.0.0",
     "chessboardjs": "^0.0.1",
+    "html-webpack-plugin": "^5.5.0",
     "jquery": "^3.6.0",
+    "lodash": "^4.17.21",
     "ts-loader": "^9.2.6",
     "typescript": "^4.5.5",
     "webpack": "^5.68.0",
@@ -18,9 +20,12 @@
   "devDependencies": {
     "@types/chess.js": "^0.11.2",
     "@types/chessboardjs": "^0.3.2",
-    "@types/jquery": "^3.5.13"
+    "@types/jquery": "^3.5.13",
+    "file-loader": "^6.2.0",
+    "html-loader": "^3.1.0"
   },
   "scripts": {
+    "prestart": "tsc",
     "start": "webpack-dev-server --mode development",
     "build": "webpack --mode production",
     "test": "echo \"Error: no text specified\" && exit 1"

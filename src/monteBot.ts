@@ -1,6 +1,7 @@
 import { Chess, ChessInstance } from "chess.js";
 import { ChessBoard, ChessBoardInstance } from "chessboardjs";
 
+// node for monte carlo tree | contains a state, parent and children
 class ChessNode {
   state: State;
   parent: ChessNode;
@@ -10,6 +11,10 @@ class ChessNode {
     this.state = new State(state.board);
     this.state.score = state.score;
     this.state.visitCount = state.visitCount;
+
+    this.state.getAllPossibleStates().forEach(element => {
+      this.children.push(new ChessNode(element))
+    });
   }
 
   clone() {
@@ -24,6 +29,7 @@ class ChessNode {
     return this.children[(Math.random() * this.children.length) >> 0];
   }
 
+  // returns the child with the highest board scoring
   getChildWithMaxScore() {
     return this.children.reduce(function (prev, current) {
       return prev.state.score > current.state.score ? prev : current;
@@ -31,10 +37,17 @@ class ChessNode {
   }
 }
 
+// very simple class to contain the root node
 class Tree {
   rootNode: ChessNode;
+
+  constructor(board : ChessInstance) {
+    this.rootNode = new ChessNode(new State(board));
+  }
+
 }
 
+// class to store a state for the nodes
 class State {
   board: ChessInstance;
   player = "";
@@ -46,6 +59,7 @@ class State {
     this.player = board.turn();
   }
 
+  // returns all possible states branching off this one
   getAllPossibleStates() {
     // constructs a list of all possible states from current state
     let states: State[];
@@ -151,7 +165,7 @@ class UCT {
   }
 }
 
-class MonteCarloTreeSearch {
+export class MonteCarloTreeSearch {
   WIN_SCORE = 10;
   level = 0;
   opponent = "";
@@ -161,7 +175,7 @@ class MonteCarloTreeSearch {
     const end = new Date().getTime() + 3000;
 
     const opponent = player === "b" ? "b" : "w";
-    const tree = new Tree();
+    const tree = new Tree(board);
     const rootNode = tree.rootNode;
     rootNode.state.board = board;
     rootNode.state.player = player;

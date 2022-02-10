@@ -1,11 +1,13 @@
-"use strict";
-exports.__esModule = true;
-var chess_js_1 = require("chess.js");
+import { Chess } from "chess.js";
 var ChessNode = /** @class */ (function () {
     function ChessNode(state) {
+        var _this = this;
         this.state = new State(state.board);
         this.state.score = state.score;
         this.state.visitCount = state.visitCount;
+        this.state.getAllPossibleStates().forEach(function (element) {
+            _this.children.push(new ChessNode(element));
+        });
     }
     ChessNode.prototype.clone = function () {
         var tempNode = new ChessNode(this.state);
@@ -24,7 +26,8 @@ var ChessNode = /** @class */ (function () {
     return ChessNode;
 }());
 var Tree = /** @class */ (function () {
-    function Tree() {
+    function Tree(board) {
+        this.rootNode = new ChessNode(new State(board));
     }
     return Tree;
 }());
@@ -42,7 +45,7 @@ var State = /** @class */ (function () {
         var states;
         this.board.moves().forEach(function (element) {
             _this.board.move(element);
-            states.push(new State(new chess_js_1.Chess(_this.board.fen())));
+            states.push(new State(new Chess(_this.board.fen())));
             _this.board.undo();
         });
         return states;
@@ -130,7 +133,7 @@ var MonteCarloTreeSearch = /** @class */ (function () {
         // define an end time which will act as a terminating condition
         var end = new Date().getTime() + 3000;
         var opponent = player === "b" ? "b" : "w";
-        var tree = new Tree();
+        var tree = new Tree(board);
         var rootNode = tree.rootNode;
         rootNode.state.board = board;
         rootNode.state.player = player;
@@ -192,3 +195,4 @@ var MonteCarloTreeSearch = /** @class */ (function () {
     };
     return MonteCarloTreeSearch;
 }());
+export { MonteCarloTreeSearch };

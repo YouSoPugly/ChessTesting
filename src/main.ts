@@ -1,14 +1,25 @@
-import { Chess } from "chess.js";
-import { ChessBoard, ChessBoardInstance } from "chessboardjs";
+import { ChessInstance, Chess } from "chess.js";
+import { BoardConfig, Callback, ChessBoard, ChessBoardInstance } from "chessboardjs";
+import { MonteCarloTreeSearch } from "./monteBot";
 
+const ChessReq : any = require('chess.js');
+const ChessboardReq : any = require('chessboardjs');
 
-var board = null
-var game = new Chess()
+const config : BoardConfig = {
+  draggable: true,
+  position: 'start',
+  onMouseoutSquare: onMouseoutSquare,
+  onMouseoverSquare: onMouseoverSquare,
+  onDragStart: onDragStart,
+  onDrop: onDrop,
+  onSnapEnd: onSnapEnd
+}
+
+var board : ChessBoardInstance =  ChessboardReq('myBoard', config);
+var game : ChessInstance = new ChessReq();
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
-var bot = new Bot(game, 2);
-
-board = ChessBoard('myBoard', config)
+var bot = new MonteCarloTreeSearch();
 
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
@@ -31,16 +42,6 @@ function onDragStart (source, piece, position, orientation) {
 
   // only pick up pieces for White
   if (piece.search(/^b/) !== -1) return false
-}
-
-function makeRandomMove () {
-  var possibleMoves = bot.generateMoves()
-
-  // game over
-  if (possibleMoves.length === 0) return
-
-  var randomIdx = Math.floor(Math.random() * possibleMoves.length)
-  game.move(possibleMoves[randomIdx])
 }
 
 async function onDrop (source, target) {
@@ -90,17 +91,6 @@ function onMouseoutSquare (square, piece) {
   removeGreySquares()
 }
 
-var config = {
-  draggable: true,
-  position: 'start',
-  onMouseoutSquare: onMouseoutSquare,
-  onMouseoverSquare: onMouseoverSquare,
-  onDragStart: onDragStart,
-  onDrop: onDrop,
-  onSnapEnd: onSnapEnd
-}
-
-
 async function fetchOpeningMove() {
   const url = "https://explorer.lichess.ovh/lichess?variant=standard&speeds=blitz,rapid,classical&fen=".concat(game.fen());
 
@@ -112,11 +102,11 @@ async function fetchOpeningMove() {
       if (data['moves'].length != 0) {
         game.move(data['moves'][0]['san'])
       } else {
-        let gameClone = new Chess(game.fen())
-        let move = bot.getMove(gameClone)
-        console.log(move)
-        game.move(move.move)
+        let gameClone = new ChessReq(game.fen())
+        let gameState = bot.findNextMove(game, "b")
+        console.log(gameState)
+        game = gameState
       }
-    }).then(board.position(game.fen())).then(console.log(bot.evaluateBoard(game)));
+    }).then( () => board.position(game.fen()));
 
   }
