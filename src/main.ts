@@ -1,14 +1,14 @@
-// NOTE: this example uses the chess.js library:
-// https://github.com/jhlywa/chess.js
+import { Chess } from "chess.js";
+import { ChessBoard, ChessBoardInstance } from "chessboardjs";
 
-//const { Chess } = require("chess.js");
 
 var board = null
 var game = new Chess()
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
-const movesFromBook = 3;
 var bot = new Bot(game, 2);
+
+board = ChessBoard('myBoard', config)
 
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
@@ -67,7 +67,7 @@ function onSnapEnd () {
   board.position(game.fen())
 }
 
-function onMouseoverSquare (square, piece) {
+function onMouseoverSquare (square : string, piece : string) {
   // get list of possible moves for this square
   var moves = game.moves({
     square: square,
@@ -100,7 +100,6 @@ var config = {
   onSnapEnd: onSnapEnd
 }
 
-board = Chessboard('myBoard', config)
 
 async function fetchOpeningMove() {
   const url = "https://explorer.lichess.ovh/lichess?variant=standard&speeds=blitz,rapid,classical&fen=".concat(game.fen());

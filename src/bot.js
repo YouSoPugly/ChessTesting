@@ -92,7 +92,6 @@ class Bot {
         }
 
         return score;
-
     }
 
     getPieceValue(piece) {
@@ -113,8 +112,6 @@ class Bot {
             default:
                 return 0
         }
-
-        return 0;
     }
 
 }
