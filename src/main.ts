@@ -12,8 +12,11 @@ const config : BoardConfig = {
   onMouseoverSquare: onMouseoverSquare,
   onDragStart: onDragStart,
   onDrop: onDrop,
-  onSnapEnd: onSnapEnd
+  onSnapEnd: onSnapEnd,
+  pieceTheme: "./img/chesspieces/wikipedia/{piece}.png",
 }
+
+
 
 var board : ChessBoardInstance =  ChessboardReq('myBoard', config);
 var game : ChessInstance = new ChessReq();

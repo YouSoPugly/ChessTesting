@@ -8,7 +8,11 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
   },
-  devServer: {},
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+  },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
     alias: {

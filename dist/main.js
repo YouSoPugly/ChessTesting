@@ -44,7 +44,8 @@ var config = {
     onMouseoverSquare: onMouseoverSquare,
     onDragStart: onDragStart,
     onDrop: onDrop,
-    onSnapEnd: onSnapEnd
+    onSnapEnd: onSnapEnd,
+    pieceTheme: "./img/chesspieces/wikipedia/{piece}.png",
 };
 var board = ChessboardReq('myBoard', config);
 var game = new ChessReq();
