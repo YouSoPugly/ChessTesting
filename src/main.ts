@@ -102,12 +102,12 @@ async function fetchOpeningMove() {
   fetch(url, options)
     .then( res => res.json() )
     .then( data => {
-      if (data['moves'].length != 0) {
+      if (data['moves'].length != 0 && false) {
         game.move(data['moves'][0]['san'])
       } else {
         let gameClone = new ChessReq(game.fen())
         let gameState = bot.findNextMove(game, "b")
-        console.log(gameState)
+        console.log(bot.tree)
         game = gameState
       }
     }).then( () => board.position(game.fen()));

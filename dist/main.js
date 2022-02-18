@@ -133,13 +133,13 @@ function fetchOpeningMove() {
             fetch(url, options)
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
-                if (data['moves'].length != 0) {
+                if (data['moves'].length != 0 && false) {
                     game.move(data['moves'][0]['san']);
                 }
                 else {
                     var gameClone = new ChessReq(game.fen());
                     var gameState = bot.findNextMove(game, "b");
-                    console.log(gameState);
+                    console.log(bot.tree);
                     game = gameState;
                 }
             }).then(function () { return board.position(game.fen()); });
