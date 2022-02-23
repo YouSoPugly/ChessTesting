@@ -1,7 +1,7 @@
 var ChessReq = require("chess.js");
 var ChessboardReq = require("chessboardjs");
 var movesChecked = 0;
-var depth = 100;
+var depth = 17;
 var thinkTime = 10000;
 // node for monte carlo tree | contains a state, parent and children
 var ChessNode = /** @class */ (function () {
@@ -32,10 +32,12 @@ var ChessNode = /** @class */ (function () {
     };
     // returns the child with the highest board scoring
     ChessNode.prototype.getChildWithMaxScore = function (player) {
-        var mult = (player == "b") ? -1 : 1;
+        var mult = player == "b" ? -1 : 1;
         this.generateChildren();
         return this.children.reduce(function (prev, current) {
-            return mult * prev.state.score > mult * current.state.score ? prev : current;
+            return mult * prev.state.score > mult * current.state.score
+                ? prev
+                : current;
         });
     };
     return ChessNode;
@@ -43,7 +45,7 @@ var ChessNode = /** @class */ (function () {
 // very simple class to contain the root node
 var Tree = /** @class */ (function () {
     function Tree(board) {
-        this.rootNode = new ChessNode(new State(board), undefined);
+        this.rootNode = new ChessNode(new State(board.fen()), undefined);
     }
     return Tree;
 }());
@@ -54,17 +56,17 @@ var State = /** @class */ (function () {
         this.visitCount = 0;
         this.score = 0;
         this.board = board;
-        this.player = board.turn();
+        this.player = board.split(" ")[1];
     }
     // returns all possible states branching off this one
     State.prototype.getAllPossibleStates = function () {
-        var _this = this;
         // constructs a list of all possible states from current state
         var states = [];
-        this.board.moves().forEach(function (element) {
-            _this.board.move(element);
-            states.push(new State(new ChessReq(_this.board.fen())));
-            _this.board.undo();
+        var board = new ChessReq(this.board);
+        board.moves().forEach(function (element) {
+            board.move(element);
+            states.push(new State(board.fen()));
+            board.undo();
         });
         return states;
     };
@@ -75,18 +77,20 @@ var State = /** @class */ (function () {
         this.player = this.getOpponent();
     };
     State.prototype.randomPlay = function () {
-        var move = this.board.moves()[(Math.random() * this.board.moves().length) >> 0];
-        this.board.move(move);
+        var board = new ChessReq(this.board);
+        var move = board.moves()[(Math.random() * board.moves().length) >> 0];
+        board.move(move);
         movesChecked++;
     };
     State.prototype.getOpponent = function () {
         return this.player === "b" ? "b" : "w";
     };
     State.prototype.evaluateBoard = function () {
-        var fen = this.board.fen();
+        var fen = this.board;
         var score = 0;
-        if (this.board.in_checkmate()) {
-            this.score = 100000 * (this.board.turn() === "b" ? -1 : 1);
+        var board = new ChessReq(fen);
+        if (board.in_checkmate()) {
+            this.score = 100000 * (board.turn() === "b" ? -1 : 1);
         }
         var i = 0;
         while (fen.charAt(i) != " ") {
@@ -134,6 +138,8 @@ var UCT = /** @class */ (function () {
     UCT.findBestNodeWithUCT = function (node) {
         var parentVisit = node.state.visitCount;
         node.generateChildren();
+        if (node.children.length == 0)
+            return node;
         return node.children.reduce(function (prev, current) {
             return UCT.uctValue(parentVisit, prev.state.score, prev.state.visitCount) >
                 UCT.uctValue(parentVisit, current.state.score, current.state.visitCount)
@@ -151,26 +157,43 @@ var MonteCarloTreeSearch = /** @class */ (function () {
     }
     MonteCarloTreeSearch.prototype.findNextMove = function (board, player) {
         // define an end time which will act as a terminating condition
+        var rootNode;
+        if (this.tree == undefined) {
+            this.tree = new Tree(board);
+            rootNode = this.tree.rootNode;
+        }
+        else {
+            var newRoot_1;
+            this.tree.rootNode.children.forEach(function (child) {
+                if (child.state.board == board.fen()) {
+                    newRoot_1 = child;
+                }
+            });
+            rootNode = newRoot_1;
+        }
         var end = new Date().getTime() + thinkTime;
         movesChecked = 0;
         var opponent = player === "b" ? "b" : "w";
-        this.tree = new Tree(board);
-        var rootNode = this.tree.rootNode;
-        rootNode.state.board = board;
-        rootNode.state.player = player;
         while (new Date().getTime() < end) {
             var promisingNode = this.selectPromisingNode(rootNode);
             var nodeToExplore = promisingNode;
-            if (!promisingNode.state.board.game_over()) {
+            if (promisingNode.children.length == 0) {
                 this.expandNode(promisingNode);
             }
-            if (promisingNode.children.length > 0) {
+            nodeToExplore = promisingNode;
+            if (promisingNode.children.length > 0 &&
+                promisingNode.state.visitCount == 0) {
                 nodeToExplore = promisingNode.getRandomChildNode();
+            }
+            while (nodeToExplore.state.visitCount != 0) {
+                nodeToExplore = this.selectPromisingNode(nodeToExplore);
             }
             this.backPropagation(this.simulateRandomPlayout(nodeToExplore));
         }
-        var winnerNode = UCT.findBestNodeWithUCT(rootNode);
+        console.log(this.tree.rootNode);
+        var winnerNode = rootNode.getChildWithMaxScore(player);
         this.tree.rootNode = winnerNode;
+        this.tree.rootNode.parent = undefined;
         console.log("Moves Checked: " + movesChecked);
         return winnerNode.state.board;
     };
@@ -182,23 +205,25 @@ var MonteCarloTreeSearch = /** @class */ (function () {
     };
     MonteCarloTreeSearch.prototype.backPropagation = function (nodeToExplore) {
         var tempNode = nodeToExplore;
+        console.log(tempNode);
+        tempNode.state.evaluateBoard();
+        var score = tempNode.state.score;
         while (tempNode != null) {
-            console.log(tempNode);
             tempNode.state.incrementVisit();
-            tempNode.state.evaluateBoard();
+            tempNode.state.score = score;
             tempNode = tempNode.parent;
         }
     };
     MonteCarloTreeSearch.prototype.simulateRandomPlayout = function (node) {
         var tempNode = node.clone();
         var boardStatus = tempNode.state;
+        tempNode.generateChildren();
         var i = 0;
-        while (!boardStatus.board.game_over() && i < depth) {
-            tempNode.generateChildren();
+        while (tempNode.children.length > 0 && i < depth) {
             tempNode = tempNode.getRandomChildNode();
-            boardStatus = tempNode.state;
             movesChecked++;
             i++;
+            tempNode.generateChildren();
         }
         return tempNode;
     };

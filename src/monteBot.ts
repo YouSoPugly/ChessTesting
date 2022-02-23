@@ -1,12 +1,12 @@
 import Chess from "chess";
-import {ChessInstance } from "chess.js";
+import { ChessInstance } from "chess.js";
 import { ChessBoard, ChessBoardInstance } from "chessboardjs";
 
 const ChessReq: any = require("chess.js");
 const ChessboardReq: any = require("chessboardjs");
 
 var movesChecked = 0;
-const depth = 100;
+const depth = 17;
 const thinkTime = 10000;
 
 // node for monte carlo tree | contains a state, parent and children
@@ -45,12 +45,13 @@ class ChessNode {
 
   // returns the child with the highest board scoring
   getChildWithMaxScore(player: String) {
-
-    let mult = (player == "b") ? -1 : 1
+    let mult = player == "b" ? -1 : 1;
 
     this.generateChildren();
     return this.children.reduce(function (prev, current) {
-      return mult*prev.state.score > mult*current.state.score ? prev : current;
+      return mult * prev.state.score > mult * current.state.score
+        ? prev
+        : current;
     });
   }
 }
@@ -60,31 +61,32 @@ class Tree {
   rootNode: ChessNode;
 
   constructor(board: ChessInstance) {
-    this.rootNode = new ChessNode(new State(board), undefined);
+    this.rootNode = new ChessNode(new State(board.fen()), undefined);
   }
 }
 
 // class to store a state for the nodes
 class State {
-  board: ChessInstance;
+  board: string;
   player = "";
   visitCount = 0;
   score = 0;
 
-  constructor(board: ChessInstance) {
+  constructor(board: string) {
     this.board = board;
-    this.player = board.turn();
+    this.player = board.split(" ")[1];
   }
 
   // returns all possible states branching off this one
   getAllPossibleStates() {
     // constructs a list of all possible states from current state
     let states: State[] = [];
+    let board : ChessInstance = new ChessReq(this.board);
 
-    this.board.moves().forEach((element) => {
-      this.board.move(element);
-      states.push(new State(new ChessReq(this.board.fen())));
-      this.board.undo();
+    board.moves().forEach((element) => {
+      board.move(element);
+      states.push(new State(board.fen()));
+      board.undo();
     });
 
     return states;
@@ -99,9 +101,10 @@ class State {
   }
 
   randomPlay() {
-    let move =
-      this.board.moves()[(Math.random() * this.board.moves().length) >> 0];
-    this.board.move(move);
+    let board : ChessInstance = new ChessReq(this.board);
+
+    let move = board.moves()[(Math.random() * board.moves().length) >> 0];
+    board.move(move);
     movesChecked++;
   }
 
@@ -110,11 +113,13 @@ class State {
   }
 
   evaluateBoard() {
-    let fen = this.board.fen();
+    let fen = this.board;
     let score = 0;
 
-    if (this.board.in_checkmate()) {
-      this.score = 100000 * (this.board.turn() === "b" ? -1 : 1);
+    let board : ChessInstance = new ChessReq(fen);
+
+    if (board.in_checkmate()) {
+      this.score = 100000 * (board.turn() === "b" ? -1 : 1);
     }
 
     let i = 0;
@@ -168,6 +173,9 @@ class UCT {
     let parentVisit = node.state.visitCount;
     node.generateChildren();
 
+    if (node.children.length == 0)
+      return node
+
     return node.children.reduce(function (prev, current) {
       return UCT.uctValue(
         parentVisit,
@@ -189,30 +197,57 @@ export class MonteCarloTreeSearch {
 
   findNextMove(board: ChessInstance, player: string) {
     // define an end time which will act as a terminating condition
+
+    var rootNode : ChessNode;
+
+    if (this.tree == undefined) {
+      this.tree = new Tree(board);
+      rootNode = this.tree.rootNode;
+    } else {
+      let newRoot: ChessNode;
+
+      this.tree.rootNode.children.forEach((child) => {
+        if (child.state.board == board.fen()) {
+          newRoot = child;
+        }
+      });
+
+      rootNode = newRoot;
+    }
+
     const end = new Date().getTime() + thinkTime;
     movesChecked = 0;
 
     const opponent = player === "b" ? "b" : "w";
-    this.tree = new Tree(board);
-    const rootNode = this.tree.rootNode;
-    rootNode.state.board = board;
-    rootNode.state.player = player;
 
     while (new Date().getTime() < end) {
       let promisingNode: ChessNode = this.selectPromisingNode(rootNode);
       let nodeToExplore: ChessNode = promisingNode;
-      if (!promisingNode.state.board.game_over()) {
+
+      if (promisingNode.children.length == 0) {
         this.expandNode(promisingNode);
       }
-      if (promisingNode.children.length > 0) {
+
+      nodeToExplore = promisingNode;
+
+      if (
+        promisingNode.children.length > 0 &&
+        promisingNode.state.visitCount == 0
+      ) {
         nodeToExplore = promisingNode.getRandomChildNode();
+      }
+
+      while (nodeToExplore.state.visitCount != 0) {
+        nodeToExplore = this.selectPromisingNode(nodeToExplore);
       }
 
       this.backPropagation(this.simulateRandomPlayout(nodeToExplore));
     }
 
-    let winnerNode: ChessNode = UCT.findBestNodeWithUCT(rootNode)
+    console.log(this.tree.rootNode);
+    let winnerNode: ChessNode = rootNode.getChildWithMaxScore(player);
     this.tree.rootNode = winnerNode;
+    this.tree.rootNode.parent = undefined;
     console.log("Moves Checked: " + movesChecked);
     return winnerNode.state.board;
   }
@@ -227,10 +262,14 @@ export class MonteCarloTreeSearch {
 
   backPropagation(nodeToExplore: ChessNode) {
     let tempNode: ChessNode = nodeToExplore;
+    console.log(tempNode);
+
+    tempNode.state.evaluateBoard();
+    let score = tempNode.state.score;
+
     while (tempNode != null) {
-      console.log(tempNode)
       tempNode.state.incrementVisit();
-      tempNode.state.evaluateBoard();
+      tempNode.state.score = score;
       tempNode = tempNode.parent;
     }
   }
@@ -238,15 +277,16 @@ export class MonteCarloTreeSearch {
   simulateRandomPlayout(node: ChessNode) {
     let tempNode: ChessNode = node.clone();
     let boardStatus = tempNode.state;
+    tempNode.generateChildren()
 
     let i = 0;
 
-    while (!boardStatus.board.game_over() && i < depth) {
-      tempNode.generateChildren();
+
+    while (tempNode.children.length > 0 && i < depth) {
       tempNode = tempNode.getRandomChildNode();
-      boardStatus = tempNode.state;
-      movesChecked++
-      i++
+      movesChecked++;
+      i++;
+      tempNode.generateChildren()
     }
 
     return tempNode;
