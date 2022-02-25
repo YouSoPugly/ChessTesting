@@ -218,7 +218,7 @@ export class MonteCarloTreeSearch {
     const end = new Date().getTime() + thinkTime;
     movesChecked = 0;
 
-    const opponent = player === "b" ? "b" : "w";
+    this.opponent = player === "b" ? "b" : "w";
 
     while (new Date().getTime() < end) {
       let promisingNode: ChessNode = this.selectPromisingNode(rootNode);

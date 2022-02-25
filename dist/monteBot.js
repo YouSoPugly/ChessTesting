@@ -173,7 +173,7 @@ var MonteCarloTreeSearch = /** @class */ (function () {
         }
         var end = new Date().getTime() + thinkTime;
         movesChecked = 0;
-        var opponent = player === "b" ? "b" : "w";
+        this.opponent = player === "b" ? "b" : "w";
         while (new Date().getTime() < end) {
             var promisingNode = this.selectPromisingNode(rootNode);
             var nodeToExplore = promisingNode;
