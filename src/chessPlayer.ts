@@ -23,20 +23,15 @@ export class chessPlayer {
         this.useBot = useBot;
         if (useBot) this.bot = new MonteCarloTreeSearch();
 
-        let onMouseoutSquare = this.onMouseoutSquare,
-            onMouseoverSquare = this.onMouseoverSquare,
-            onDragStart = this.onDragStart,
-            onDrop = this.onDrop,
-            onSnapEnd = this.onSnapEnd;
 
         let config = {
             draggable: true,
             position: "start",
-            onMouseoutSquare: onMouseoutSquare,
-            onMouseoverSquare: onMouseoverSquare,
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd,
+            onMouseoutSquare: this.onMouseoutSquare,
+            onMouseoverSquare: this.onMouseoverSquare,
+            onDragStart: this.onDragStart,
+            onDrop: this.onDrop,
+            onSnapEnd: this.onSnapEnd,
             pieceTheme: "./img/chesspieces/wikipedia/{piece}.png",
         };
 

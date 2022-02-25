@@ -20,3 +20,7 @@ const intervals = [
     const count = Math.floor(seconds / interval.seconds);
     return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;
   }
+
+
+
+  

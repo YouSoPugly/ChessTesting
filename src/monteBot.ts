@@ -244,7 +244,6 @@ export class MonteCarloTreeSearch {
       this.backPropagation(this.simulateRandomPlayout(nodeToExplore));
     }
 
-    console.log(this.tree.rootNode);
     let winnerNode: ChessNode = rootNode.getChildWithMaxScore(player);
     this.tree.rootNode = winnerNode;
     this.tree.rootNode.parent = undefined;
@@ -262,7 +261,6 @@ export class MonteCarloTreeSearch {
 
   backPropagation(nodeToExplore: ChessNode) {
     let tempNode: ChessNode = nodeToExplore;
-    console.log(tempNode);
 
     tempNode.state.evaluateBoard();
     let score = tempNode.state.score;
@@ -276,7 +274,6 @@ export class MonteCarloTreeSearch {
 
   simulateRandomPlayout(node: ChessNode) {
     let tempNode: ChessNode = node.clone();
-    let boardStatus = tempNode.state;
     tempNode.generateChildren()
 
     let i = 0;
