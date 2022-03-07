@@ -119,7 +119,7 @@ class State {
     let board : ChessInstance = new ChessReq(fen);
 
     if (board.in_checkmate()) {
-      this.score = 100000 * (board.turn() === "b" ? -1 : 1);
+      score = 100000 * (board.turn() === "b" ? -1 : 1);
     }
 
     let i = 0;
